@@ -189,11 +189,16 @@ async def query_notebook(request: QueryRequest):
     """
     Realiza una consulta al cuaderno NotebookLM
     """
+    global client
+    # Auto-recuperación: Si el cliente no está inicializado, intentar iniciarlo ahora
     if not client:
-        raise HTTPException(
-            status_code=503,
-            detail="Cliente NotebookLM no inicializado. Ejecuta 'notebooklm-mcp-auth' primero."
-        )
+        print("⚠️ Cliente no inicializado. Intentando inicialización de emergencia...")
+        # Intentamos inicializar forzando refresh si es necesario
+        if not init_client(force_refresh=True):
+            raise HTTPException(
+                status_code=503,
+                detail="Cliente NotebookLM no inicializado. Ejecuta 'notebooklm-mcp-auth' primero."
+            )
     
     try:
         # Implementar lógica de reintento automático (1 vez)
