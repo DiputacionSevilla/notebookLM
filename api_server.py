@@ -56,12 +56,32 @@ client: Optional[NotebookLMClient] = None
 
 
 def init_client():
-    """Inicializa el cliente NotebookLM con tokens cacheados"""
+    """Inicializa el cliente NotebookLM con tokens cacheados o variables de entorno"""
     global client
     
+    # 1. Intentar cargar desde Variables de Entorno (Cloud/Render)
+    cookie_header = os.environ.get("NOTEBOOKLM_COOKIES", "")
+    if cookie_header:
+        print("☁️ Usando autenticación por variables de entorno (Cloud)")
+        try:
+            # Función auxiliar para parsear cookies string a dict
+            cookies = {}
+            for item in cookie_header.split(";"):
+                if "=" in item:
+                    k, v = item.strip().split("=", 1)
+                    cookies[k] = v
+            
+            client = NotebookLMClient(cookies=cookies)
+            print("✅ Cliente NotebookLM inicializado desde Env Vars")
+            return True
+        except Exception as e:
+            print(f"❌ Error parseando cookies de entorno: {e}")
+    
+    # 2. Intentar cargar desde archivo local (Desarrollo)
+    print("📂 Buscando tokens locales...")
     tokens = load_cached_tokens()
     if not tokens:
-        print("❌ No se encontraron tokens de autenticación cacheados")
+        print("❌ No se encontraron tokens de autenticación (ni Env ni Local)")
         print("   Ejecuta: notebooklm-mcp-auth para autenticarte primero")
         return False
     
@@ -71,7 +91,7 @@ def init_client():
             csrf_token=tokens.csrf_token,
             session_id=tokens.session_id
         )
-        print("✅ Cliente NotebookLM inicializado correctamente")
+        print("✅ Cliente NotebookLM inicializado desde archivo local")
         return True
     except Exception as e:
         print(f"❌ Error inicializando cliente: {e}")
