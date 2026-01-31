@@ -166,25 +166,39 @@ async def query_notebook(request: QueryRequest):
         )
     
     try:
-        # Realizar la consulta de forma síncrona (el cliente no es async)
-        result = await asyncio.to_thread(
-            client.query,
-            notebook_id=request.notebook_id,
-            query_text=request.question,
-            conversation_id=request.conversation_id,
-            timeout=request.timeout
-        )
-        
-        # Extraer la respuesta
-        answer = result.get("answer", "") if isinstance(result, dict) else str(result)
-        conv_id = result.get("conversation_id") if isinstance(result, dict) else None
-        
-        return QueryResponse(
-            success=True,
-            answer=answer,
-            conversation_id=conv_id
-        )
-        
+        # Implementar lógica de reintento automático (1 vez)
+        for attempt in range(2):
+            try:
+                # Realizar la consulta de forma síncrona
+                result = await asyncio.to_thread(
+                    client.query,
+                    notebook_id=request.notebook_id,
+                    query_text=request.question,
+                    conversation_id=request.conversation_id,
+                    timeout=request.timeout
+                )
+                
+                # Extraer la respuesta
+                answer = result.get("answer", "") if isinstance(result, dict) else str(result)
+                conv_id = result.get("conversation_id") if isinstance(result, dict) else None
+                
+                return QueryResponse(
+                    success=True,
+                    answer=answer,
+                    conversation_id=conv_id
+                )
+                
+            except AuthenticationError as e:
+                if attempt == 0:
+                    print(f"⚠️ Error de autenticación en intento 1: {e}")
+                    print("🔄 Intentando refrescar tokens y reintentar...")
+                    # Si refresca con éxito, el loop continúa
+                    if init_client():
+                        continue 
+                
+                # Si fallamos en el segundo intento o no pudimos refrescar, relanzar para que lo capture el outer except
+                raise e
+
     except AuthenticationError as e:
         raise HTTPException(
             status_code=401,
