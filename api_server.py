@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import httpx  # Para manejar excepciones HTTP específicas
 
 # Importar las bibliotecas de NotebookLM MCP
 from notebooklm_mcp.auth import load_cached_tokens
@@ -239,7 +240,16 @@ async def query_notebook(request: QueryRequest):
             status_code=401,
             detail=f"Error de autenticación: {str(e)}. Ejecuta 'notebooklm-mcp-auth' para renovar tokens."
         )
+    except httpx.HTTPStatusError as e:
+        # Errores 400/500 de NotebookLM - puede deberse a session_id/BL desactualizado
+        error_detail = f"Error HTTP {e.response.status_code}: {e.response.text[:200]}"
+        print(f"❌ HTTPStatusError: {error_detail}")
+        return QueryResponse(
+            success=False,
+            error=f"Error del servidor NotebookLM ({e.response.status_code}). Intenta ejecutar 'notebooklm-mcp-auth' para renovar los tokens."
+        )
     except Exception as e:
+        print(f"❌ Error inesperado: {type(e).__name__}: {e}")
         return QueryResponse(
             success=False,
             error=str(e)
