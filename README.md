@@ -1,120 +1,179 @@
-# 🤖 Chat NotebookLM - YouTube IA Strategy
+# 🤖 Chat con NotebookLM
 
-Aplicación web desarrollada en Streamlit para interactuar mediante chat con el cuaderno de NotebookLM "Estrategia YouTube IA y Formación School".
+Aplicación de chat que conecta con NotebookLM para consultar cuadernos de conocimiento mediante una interfaz web moderna.
 
-## ✨ Características
+## 📋 Arquitectura
 
-- 💬 Interfaz de chat moderna y limpia
-- 🔗 Conexión directa con NotebookLM vía MCP Server
-- 📝 Historial de conversación persistente en la sesión
-- ⚡ Indicadores de carga y manejo de errores
-- 🎨 Diseño con gradientes y estilos premium
-
-## 📋 Requisitos Previos
-
-- Python 3.8 o superior
-- Servidor MCP de NotebookLM configurado y autenticado
-- Cuenta de NotebookLM con el cuaderno creado
-
-## 🚀 Instalación
-
-1. **Clonar o ubicar el proyecto:**
-   ```bash
-   cd c:\Users\carry\OneDrive\Documentos\Proyectos\notebooklm
-   ```
-
-2. **Instalar dependencias:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configurar variables de entorno (opcional):**
-   ```bash
-   # Copiar el archivo de ejemplo
-   copy .env.example .env
-   
-   # Editar .env con tus valores
-   ```
-
-## 🎯 Uso
-
-1. **Ejecutar la aplicación:**
-   ```bash
-   streamlit run app.py
-   ```
-
-2. **Abrir en el navegador:**
-   - La aplicación se abrirá automáticamente en `http://localhost:8501`
-   - Si no se abre, accede manualmente a la URL
-
-3. **Interactuar con el chat:**
-   - Escribe tus preguntas en el campo de entrada
-   - Las respuestas provienen directamente del cuaderno NotebookLM
-   - El historial se mantiene durante la sesión
-
-## 🛠️ Configuración
-
-### ID del Cuaderno NotebookLM
-
-El ID del cuaderno está configurado en `app.py`:
-```python
-NOTEBOOK_ID = "8442d244-d797-48fe-b495-21d053e6ac4e"
+```
+┌─────────────────┐     HTTP      ┌─────────────────┐     API      ┌─────────────────┐
+│   Streamlit     │ ───────────→  │    FastAPI      │ ──────────→  │   NotebookLM    │
+│   (Frontend)    │               │   (Backend)     │              │   (Google)      │
+│   Puerto 8501   │  ← ───────────│   Puerto 8000   │ ← ──────────│                 │
+└─────────────────┘               └─────────────────┘              └─────────────────┘
 ```
 
-### Servidor MCP
-
-La aplicación utiliza el servidor MCP de NotebookLM que debe estar configurado en:
-```
-C:\Users\carry\.gemini\antigravity\mcp_config.json
-```
-
-## 💡 Ejemplos de Preguntas
-
-- "¿Qué área de conocimiento tiene más futuro para emprender en IA?"
-- "¿Cómo implementar un chatbot con RAG?"
-- "Dame ideas de contenido para mi canal de YouTube sobre IA"
-- "¿Qué herramientas de automatización recomiendas para escalar?"
-
-## 🎨 Estructura del Proyecto
+## 🗂️ Estructura del Proyecto
 
 ```
 notebooklm/
-├── app.py                 # Aplicación principal Streamlit
-├── requirements.txt       # Dependencias de Python
-├── README.md             # Este archivo
-└── .env.example          # Plantilla de variables de entorno
+├── app.py              # Frontend Streamlit (interfaz de chat)
+├── api_server.py       # Backend FastAPI (puente a NotebookLM)
+├── export_cookies.py   # Script para exportar cookies a la nube
+├── debug_query.py      # Script de diagnóstico
+├── start.bat           # Script para iniciar ambos servidores (Windows)
+├── requirements.txt    # Dependencias Python
+├── Dockerfile          # Configuración Docker para despliegue
+├── .gitignore          # Archivos a ignorar en Git
+└── README.md           # Este archivo
 ```
 
-## 🐛 Solución de Problemas
+## 🚀 Inicio Rápido
 
-### Error: "No se puede conectar al servidor MCP"
-- Verifica que el servidor MCP esté autenticado
-- Ejecuta: `notebooklm-mcp-auth` en la terminal
-- Reinicia la aplicación Streamlit
+### Requisitos Previos
+- Python 3.11+
+- Cuenta de Google con acceso a NotebookLM
+- Git
 
-### Error: "Notebook not found"
-- Verifica que el NOTEBOOK_ID sea correcto
-- Comprueba que tienes acceso al cuaderno en NotebookLM
+### Instalación Local
 
-### La aplicación no se abre en el navegador
-- Abre manualmente: `http://localhost:8501`
-- Verifica que el puerto 8501 no esté ocupado
-- Intenta con otro puerto: `streamlit run app.py --server.port 8502`
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/TU_USUARIO/notebookLM.git
+cd notebookLM
+
+# 2. Crear entorno virtual (recomendado)
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+
+# 4. Autenticarse con NotebookLM (primera vez)
+notebooklm-mcp-auth
+```
+
+### Ejecutar en Local
+
+**Opción A - Script automático (Windows):**
+```bash
+start.bat
+```
+
+**Opción B - Manual:**
+```bash
+# Terminal 1: Backend
+python api_server.py
+
+# Terminal 2: Frontend
+streamlit run app.py
+```
+
+Abre http://localhost:8501 en tu navegador.
+
+## ☁️ Despliegue en la Nube
+
+### Backend (Render)
+
+1. **Crear nuevo Web Service** en [render.com](https://render.com)
+2. **Conectar repositorio** de GitHub
+3. **Configurar:**
+   - Environment: `Docker`
+   - Branch: `main`
+4. **Agregar variable de entorno:**
+   - Key: `NOTEBOOKLM_COOKIES`
+   - Value: *(ejecuta `python export_cookies.py` y copia el resultado)*
+
+### Frontend (Streamlit Cloud)
+
+1. **Ir a** [share.streamlit.io](https://share.streamlit.io)
+2. **Conectar repositorio** de GitHub
+3. **Configurar secrets** (Advanced settings):
+   ```toml
+   API_BASE_URL = "https://TU-SERVICIO.onrender.com"
+   ```
+
+## 🔧 Mantenimiento
+
+### Renovar Autenticación (cuando caduquen las cookies)
+
+Las cookies de Google duran aproximadamente **1-3 semanas**. Si la app deja de funcionar:
+
+```bash
+# 1. Ejecutar en tu PC local
+notebooklm-mcp-auth
+
+# 2. Exportar las nuevas cookies
+python export_cookies.py
+
+# 3. Copiar el resultado y actualizar en Render:
+#    Dashboard → Tu servicio → Environment → NOTEBOOKLM_COOKIES
+```
+
+### Cambiar el Cuaderno de NotebookLM
+
+Edita `app.py` línea 25:
+```python
+NOTEBOOK_ID = "tu-nuevo-notebook-id"
+```
+
+El ID se encuentra en la URL de NotebookLM: `https://notebooklm.google.com/notebook/ESTE-ES-EL-ID`
+
+## 📡 API Endpoints
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/health` | Estado del servidor y autenticación |
+| POST | `/query` | Realizar consulta al cuaderno |
+| GET | `/notebooks` | Listar cuadernos disponibles |
+| POST | `/refresh-auth` | Intentar refrescar autenticación |
+
+### Ejemplo de Consulta
+
+```bash
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "¿Cuál es la estrategia principal?",
+    "notebook_id": "8442d244-d797-48fe-b495-21d053e6ac4e"
+  }'
+```
+
+## 🛡️ Características de Estabilidad
+
+- **Auto-retry:** Si falla la autenticación, reintenta automáticamente
+- **Lazy Initialization:** El cliente se inicializa bajo demanda
+- **Headless Auth Recovery:** Intenta refrescar tokens automáticamente (solo local)
+- **Error Handling:** Captura específica de errores HTTP 400/500
 
 ## 🔐 Seguridad
 
-- Las credenciales de NotebookLM se gestionan a través del servidor MCP
-- No se almacenan datos sensibles en el código
-- El historial de chat se mantiene solo en memoria durante la sesión
+- Las cookies **nunca** se suben a Git (`.gitignore`)
+- En producción, usa variables de entorno para secretos
+- El archivo `auth.json` local está excluido del repositorio
+
+## 📦 Dependencias Principales
+
+- `fastapi` - Framework backend
+- `uvicorn` - Servidor ASGI
+- `streamlit` - Framework frontend
+- `notebooklm-mcp-server` - Cliente de NotebookLM
+- `httpx` - Cliente HTTP asíncrono
+- `requests` - Cliente HTTP (frontend)
+
+## 🐛 Solución de Problemas
+
+| Problema | Solución |
+|----------|----------|
+| "API no autenticada" | Ejecuta `notebooklm-mcp-auth` |
+| "Error 400 Bad Request" | Renueva cookies con `export_cookies.py` |
+| "Conexión rechazada" | Verifica que `api_server.py` esté corriendo |
+| Nube no funciona | Actualiza `NOTEBOOKLM_COOKIES` en Render |
 
 ## 📄 Licencia
 
-Proyecto personal para gestión de conocimiento de estrategia YouTube IA.
-
-## 🤝 Contribuciones
-
-Este es un proyecto personal, pero puedes adaptarlo para tus propios cuadernos de NotebookLM.
+Proyecto personal para uso educativo.
 
 ---
 
-**Desarrollado con ❤️ usando Streamlit y NotebookLM MCP Server**
+*Última actualización: Enero 2026*
