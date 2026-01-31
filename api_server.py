@@ -55,16 +55,28 @@ class HealthResponse(BaseModel):
 client: Optional[NotebookLMClient] = None
 
 
-def init_client():
-    """Inicializa el cliente NotebookLM con tokens cacheados o variables de entorno"""
+# Importar CLI de auth para refresco automático
+try:
+    from notebooklm_mcp.auth_cli import run_headless_auth
+except ImportError:
+    run_headless_auth = None
+
+def init_client(force_refresh: bool = False):
+    """
+    Inicializa el cliente NotebookLM con tokens.
+    
+    Args:
+        force_refresh (bool): Si es True, intenta generar nuevos tokens usando headless auth.
+    """
     global client
     
     # 1. Intentar cargar desde Variables de Entorno (Cloud/Render)
+    # NOTA: En la nube, no podemos hacer headless refresh, así que esto es prioritario.
     cookie_header = os.environ.get("NOTEBOOKLM_COOKIES", "")
     if cookie_header:
-        print("☁️ Usando autenticación por variables de entorno (Cloud)")
+        # En Cloud, solo recargamos si no hay cliente o si las cookies cambiaron (difícil en runtime)
+        # Por simplicidad, siempre intentamos re-instanciar con las env vars.
         try:
-            # Función auxiliar para parsear cookies string a dict
             cookies = {}
             for item in cookie_header.split(";"):
                 if "=" in item:
@@ -72,17 +84,32 @@ def init_client():
                     cookies[k] = v
             
             client = NotebookLMClient(cookies=cookies)
-            print("✅ Cliente NotebookLM inicializado desde Env Vars")
+            if force_refresh:
+                print("☁️ (Cloud) Reinicializando cliente con Env Vars...")
             return True
         except Exception as e:
             print(f"❌ Error parseando cookies de entorno: {e}")
     
-    # 2. Intentar cargar desde archivo local (Desarrollo)
-    print("📂 Buscando tokens locales...")
+    # 2. Refresco activo (Headless Auth) - Solo local
+    new_tokens_generated = False
+    if force_refresh and run_headless_auth:
+        print("🔄 Intentando generar NUEVOS tokens (Headless Auth)...")
+        try:
+            # Esto abre un navegador/proceso invisible para obtener tokens frescos
+            tokens = run_headless_auth()
+            if tokens:
+                print("✨ Nuevos tokens generados exitosamente.")
+                new_tokens_generated = True
+                # run_headless_auth ya guarda en disco, así que load_cached_tokens funcionará
+        except Exception as e:
+            print(f"⚠️ Falló el auto-refresh headless: {e}")
+
+    # 3. Carga desde archivo local
+    print("📂 Cargando tokens locales...")
     tokens = load_cached_tokens()
+    
     if not tokens:
-        print("❌ No se encontraron tokens de autenticación (ni Env ni Local)")
-        print("   Ejecuta: notebooklm-mcp-auth para autenticarte primero")
+        print("❌ No se encontraron tokens. Ejecuta 'notebooklm-mcp-auth' manualmente.")
         return False
     
     try:
@@ -91,7 +118,10 @@ def init_client():
             csrf_token=tokens.csrf_token,
             session_id=tokens.session_id
         )
-        print("✅ Cliente NotebookLM inicializado desde archivo local")
+        msg = "✅ Cliente NotebookLM inicializado"
+        if new_tokens_generated: msg += " (tokens frescos)"
+        elif force_refresh: msg += " (recarga de disco)"
+        print(msg)
         return True
     except Exception as e:
         print(f"❌ Error inicializando cliente: {e}")
@@ -191,9 +221,9 @@ async def query_notebook(request: QueryRequest):
             except AuthenticationError as e:
                 if attempt == 0:
                     print(f"⚠️ Error de autenticación en intento 1: {e}")
-                    print("🔄 Intentando refrescar tokens y reintentar...")
-                    # Si refresca con éxito, el loop continúa
-                    if init_client():
+                    print("🔄 Intentando refrescar tokens (Headless) y reintentar...")
+                    # Forzar refresco real (headless auth si es posible)
+                    if init_client(force_refresh=True):
                         continue 
                 
                 # Si fallamos en el segundo intento o no pudimos refrescar, relanzar para que lo capture el outer except
