@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos Premium (Vuelve el Glassmorphism)
+# Estilos Premium de Alto Contraste (Cero Fallos Visuales)
 def local_css():
     st.markdown("""
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,98 +51,101 @@ def local_css():
         h1, h2, h3 {
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
+            color: #ffffff !important;
         }
 
         /* Main Container Background - El original que gustaba */
         .stApp {
             background-color: #0e1117;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(26, 115, 232, 0.15) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(26, 115, 232, 0.2) 0px, transparent 50%);
         }
 
-        /* Sidebar Styling (Glassmorphism) */
+        /* Sidebar Styling (Sólido para evitar transparencias fallidas) */
         section[data-testid="stSidebar"] {
-            background-color: rgba(17, 25, 40, 0.7) !important;
-            backdrop-filter: blur(12px);
+            background-color: #1a1e26 !important;
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
         section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
-        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
-            color: #e2e8f0 !important;
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3,
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] li {
+            color: #ffffff !important;
         }
 
-        /* Chat Messages (Glassmorphism) */
+        /* Chat Messages (Sólidos y contrastados) */
         [data-testid="stChatMessage"] {
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 15px;
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
 
-        /* User Message specific style */
+        /* User Message (Highlight en Azul/Verde) */
         [data-testid="stChatMessage"]:nth-child(even) {
-            background-color: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
+            background-color: #0f172a !important;
+            border: 1px solid #1e40af !important;
         }
 
-        /* Full white text for responses */
-        [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li {
+        /* Full white text forced for EVERYTHING in messages */
+        [data-testid="stChatMessage"] * {
             color: #ffffff !important;
-            font-size: 1.05rem;
-            line-height: 1.6;
+            font-size: 1.1rem !important;
+            line-height: 1.6 !important;
         }
 
-        /* Titles and Text (Grande como pedido) */
+        /* Titles and Text (Grande y brillante) */
         .big-title {
-            background: linear-gradient(90deg, #ffffff 0%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 4.5rem;
+            color: #ffffff;
+            font-size: 4rem;
             font-weight: 800;
             margin-bottom: 0.2rem;
             text-align: left;
             line-height: 1.1;
+            text-shadow: 0 2px 10px rgba(34, 197, 94, 0.5);
         }
         
         .subtitle {
-            color: #94a3b8;
+            color: #34d399; /* Verde esmeralda brillante */
             font-size: 1.3rem;
-            margin-bottom: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
         }
 
         /* Custom widgets */
         .stButton>button {
-            border-radius: 10px;
-            font-weight: 600;
-            background-color: #22c55e !important;
+            border-radius: 8px;
+            font-weight: 800;
+            background-color: #10b981 !important;
             color: white !important;
             border: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.8rem !important;
         }
         
         .stButton>button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
-            background-color: #16a34a !important;
+            background-color: #059669 !important;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
         }
 
         /* Sidebar info box */
         .sidebar-info {
-            background-color: rgba(255,255,255,0.05);
-            padding: 1.2rem;
-            border-radius: 12px;
-            border-left: 4px solid #22c55e;
-            margin-bottom: 1.5rem;
-            color: #cbd5e1;
+            background-color: #0f172a;
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 5px solid #10b981;
+            margin-bottom: 1rem;
+            color: #ffffff !important;
         }
 
-        /* Hide Streamlit elements */
+        /* Status colors */
+        .status-online { color: #4ade80 !important; font-weight: bold; }
+        .status-offline { color: #f87171 !important; font-weight: bold; }
+
+        /* Hide Streamlit components */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
