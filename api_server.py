@@ -11,6 +11,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx  # Para manejar excepciones HTTP específicas
+import json
+from pathlib import Path
 
 # Importar las bibliotecas de NotebookLM MCP
 from notebooklm_mcp.auth import load_cached_tokens
@@ -64,68 +66,47 @@ except ImportError:
 
 def init_client(force_refresh: bool = False):
     """
-    Inicializa el cliente NotebookLM con tokens.
-    
-    Args:
-        force_refresh (bool): Si es True, intenta generar nuevos tokens usando headless auth.
+    Inicializa el cliente NotebookLM con tokens del archivo auth.json.
     """
     global client
     
-    # 1. Intentar cargar desde Variables de Entorno (Cloud/Render)
-    # NOTA: En la nube, no podemos hacer headless refresh, así que esto es prioritario.
+    # 1. Cargar desde Variables de Entorno (Prioridad Nube)
     cookie_header = os.environ.get("NOTEBOOKLM_COOKIES", "")
     if cookie_header:
-        # En Cloud, solo recargamos si no hay cliente o si las cookies cambiaron (difícil en runtime)
-        # Por simplicidad, siempre intentamos re-instanciar con las env vars.
         try:
             cookies = {}
             for item in cookie_header.split(";"):
                 if "=" in item:
                     k, v = item.strip().split("=", 1)
                     cookies[k] = v
-            
             client = NotebookLMClient(cookies=cookies)
-            if force_refresh:
-                print("☁️ (Cloud) Reinicializando cliente con Env Vars...")
+            print("[Cloud] Cliente inicializado con Env Vars")
             return True
         except Exception as e:
-            print(f"❌ Error parseando cookies de entorno: {e}")
-    
-    # 2. Refresco activo (Headless Auth) - Solo local
-    new_tokens_generated = False
-    if force_refresh and run_headless_auth:
-        print("🔄 Intentando generar NUEVOS tokens (Headless Auth)...")
-        try:
-            # Esto abre un navegador/proceso invisible para obtener tokens frescos
-            tokens = run_headless_auth()
-            if tokens:
-                print("✨ Nuevos tokens generados exitosamente.")
-                new_tokens_generated = True
-                # run_headless_auth ya guarda en disco, así que load_cached_tokens funcionará
-        except Exception as e:
-            print(f"⚠️ Falló el auto-refresh headless: {e}")
+            print(f"[ERROR] Error cookies env: {e}")
 
-    # 3. Carga desde archivo local
-    print("📂 Cargando tokens locales...")
-    tokens = load_cached_tokens()
+    # 2. Carga desde Disco (Manual para evitar cache de la librería)
+    auth_file = Path.home() / ".notebooklm-mcp" / "auth.json"
+    print(f"[INFO] Cargando tokens frescos desde {auth_file}...")
     
-    if not tokens:
-        print("❌ No se encontraron tokens. Ejecuta 'notebooklm-mcp-auth' manualmente.")
+    if not auth_file.exists():
+        print("[ERROR] No se encontro auth.json. Usa 'notebooklm-mcp-auth'.")
         return False
     
     try:
+        with open(auth_file, "r") as f:
+            data = json.load(f)
+        
+        # Re-inicializar cliente con datos frescos
         client = NotebookLMClient(
-            cookies=tokens.cookies,
-            csrf_token=tokens.csrf_token,
-            session_id=tokens.session_id
+            cookies=data.get("cookies", {}),
+            csrf_token=data.get("csrf_token"),
+            session_id=data.get("session_id")
         )
-        msg = "✅ Cliente NotebookLM inicializado"
-        if new_tokens_generated: msg += " (tokens frescos)"
-        elif force_refresh: msg += " (recarga de disco)"
-        print(msg)
+        print("[OK] Cliente NotebookLM sincronizado con disco (Manual)")
         return True
     except Exception as e:
-        print(f"❌ Error inicializando cliente: {e}")
+        print(f"[ERROR] Error al instanciar cliente: {e}")
         return False
 
 
@@ -133,11 +114,11 @@ def init_client(force_refresh: bool = False):
 async def lifespan(app: FastAPI):
     """Manejo del ciclo de vida de la aplicación"""
     # Startup
-    print("🚀 Iniciando servidor FastAPI para NotebookLM...")
+    print("[START] Iniciando servidor FastAPI para NotebookLM...")
     init_client()
     yield
     # Shutdown
-    print("👋 Cerrando servidor...")
+    print("[STOP] Cerrando servidor...")
 
 
 # ============================================================================
@@ -188,26 +169,21 @@ async def health_check():
 @app.post("/query", response_model=QueryResponse)
 async def query_notebook(request: QueryRequest):
     """
-    Realiza una consulta al cuaderno NotebookLM
+    Realiza una consulta asegurando sincronización total con auth.json
     """
     global client
-    print(f"📥 Consulta recibida: {request.question[:50]}...")
     
-    # Auto-recuperación: Si el cliente no está inicializado, intentar iniciarlo ahora
-    if not client:
-        print("⚠️ Cliente no inicializado. Intentando inicialización...")
-        if not init_client(force_refresh=True):
-            print("❌ Error: No se pudo inicializar el cliente.")
-            raise HTTPException(
-                status_code=503,
-                detail="Cliente NotebookLM no inicializado. Ejecuta 'notebooklm-mcp-auth' primero."
-            )
+    # FORZAR re-carga de tokens en cada consulta para asegurar que 
+    # si el usuario hizo re-login, lo pillemos al vuelo.
+    init_client()
+    
+    print(f"[QUERY] Consulta recibida: {request.question[:50]}...")
     
     try:
         # Implementar lógica de reintento automático (1 vez)
         for attempt in range(2):
             try:
-                print(f"🔄 Intento {attempt + 1}/2...")
+                print(f"[RETRY] Intento {attempt + 1}/2...")
                 
                 # Enviar la pregunta limpia para que NotebookLM use su propio contexto optimizado
                 full_query = request.question
@@ -247,35 +223,53 @@ async def query_notebook(request: QueryRequest):
                 )
                 
             except AuthenticationError as e:
-                print(f"⚠️ Error de autenticación en intento {attempt + 1}: {e}")
+                print(f"[WARN] Error de autenticacion en intento {attempt + 1}: {e}")
                 if attempt == 0:
-                    print("🔄 Intentando refrescar tokens (Headless) y reintentar...")
+                    print("[RETRY] Intentando refrescar tokens (Headless) y reintentar...")
                     if init_client(force_refresh=True):
                         continue 
                 raise e
             except Exception as e:
-                print(f"🔍 Excepción en intento {attempt + 1}: {type(e).__name__}: {e}")
+                print(f"[DEBUG] Excepcion en intento {attempt + 1}: {type(e).__name__}: {e}")
                 raise e
 
     except AuthenticationError as e:
-        print(f"❌ Error final de autenticación: {e}")
+        print(f"[ERROR] Error final de autenticacion: {e}")
         raise HTTPException(
             status_code=401,
             detail=f"Error de autenticación: {str(e)}. Ejecuta 'notebooklm-mcp-auth' para renovar tokens."
         )
     except httpx.HTTPStatusError as e:
         error_detail = f"Error HTTP {e.response.status_code}: {e.response.text[:200]}"
-        print(f"❌ HTTPStatusError: {error_detail}")
+        print(f"[ERROR] HTTPStatusError: {error_detail}")
         return QueryResponse(
             success=False,
             error=f"Error del servidor NotebookLM ({e.response.status_code})."
         )
     except Exception as e:
-        print(f"❌ Error inesperado: {type(e).__name__}: {e}")
+        print(f"[ERROR] Error inesperado: {type(e).__name__}: {e}")
         return QueryResponse(
             success=False,
-            error=str(e)
+            error=f"Error inesperado: {type(e).__name__}: {str(e)}"
         )
+
+
+@app.get("/debug-tokens")
+async def debug_tokens():
+    """Muestra qué cuenta está cargada actualmente"""
+    tokens = load_cached_tokens()
+    if not tokens:
+        return {"status": "error", "message": "No se encontraron tokens en disco"}
+    
+    # Extraer un fragmento seguro de la cookie para identificación
+    psid = tokens.cookies.get("__Secure-3PSID", "N/A")
+    return {
+        "status": "ok",
+        "psid_prefix": psid[:15] + "...",
+        "csrf_present": bool(tokens.csrf_token),
+        "session_id": tokens.session_id,
+        "active_notebook": "8442d244-d797-48fe-b495-21d053e6ac4e"
+    }
 
 
 @app.get("/notebooks", response_model=list[NotebookInfo])
@@ -343,13 +337,13 @@ async def refresh_auth():
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     print("=" * 60)
-    print("🚀 NotebookLM Bridge API Server")
+    print("NotebookLM Bridge API Server")
     print("=" * 60)
     print()
-    print("📍 Servidor: http://localhost:8000")
-    print("📖 Documentación: http://localhost:8000/docs")
+    print("Servidor: http://localhost:8000")
+    print("Documentacion: http://localhost:8000/docs")
     print()
     print("Endpoints disponibles:")
     print("  GET  /           - Health check")
@@ -359,5 +353,5 @@ if __name__ == "__main__":
     print("  GET  /notebook/{id} - Obtener cuaderno")
     print()
     print("=" * 60)
-    
+
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
