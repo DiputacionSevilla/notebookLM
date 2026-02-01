@@ -169,7 +169,10 @@ st.markdown('<p class="subtitle">Análisis inteligente del Presupuesto 2026 - Di
 
 # Sidebar Premium
 with st.sidebar:
-    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_xN8E3340076-000000000000", width=100, use_container_width=False) # Placeholder o Logo
+    try:
+        st.image("logo.png", width=200, use_container_width=False)
+    except:
+        st.markdown("🏛️ **Diputación de Sevilla**")
     st.markdown("## 🏛️ Gestión Presupuestaria")
     
     # Estado de la conexión
