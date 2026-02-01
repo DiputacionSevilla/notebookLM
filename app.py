@@ -1,27 +1,26 @@
 """
-Chat Streamlit para NotebookLM
-Conecta con el servidor FastAPI para consultar NotebookLM
+Chat Streamlit Premium para NotebookLM
+Adaptado para el Presupuesto 2026 - Diputación de Sevilla
 """
 import streamlit as st
 import requests
 import json
+import base64
 
 # ============================================================================
 # Configuración
 # ============================================================================
 
-# Configuración
 try:
     if "API_BASE_URL" in st.secrets:
         API_BASE_URL = st.secrets["API_BASE_URL"]
     else:
         API_BASE_URL = "http://localhost:8000"
-except FileNotFoundError:
-    API_BASE_URL = "http://localhost:8000"
 except Exception:
-    # Captura StreamlitSecretNotFoundError y otros errores de configuración
     API_BASE_URL = "http://localhost:8000"
 
+# ID del cuaderno (Actualizado para el nuevo contexto si es necesario, 
+# por ahora mantenemos el ID pero el usuario indicó que el contenido cambió)
 NOTEBOOK_ID = "8442d244-d797-48fe-b495-21d053e6ac4e"
 
 # ============================================================================
@@ -29,59 +28,123 @@ NOTEBOOK_ID = "8442d244-d797-48fe-b495-21d053e6ac4e"
 # ============================================================================
 
 st.set_page_config(
-    page_title="Chat NotebookLM - YouTube IA Strategy",
-    page_icon="🤖",
+    page_title="Presupuesto 2026 - Dipu Sevilla",
+    page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Estilos personalizados
-st.markdown("""
-<style>
-    .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .stChatMessage {
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-    }
-    h1 {
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    .status-connected {
-        color: #00ff00;
-        font-weight: bold;
-    }
-    .status-disconnected {
-        color: #ff0000;
-        font-weight: bold;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Estilos Premium (Lavado de cara)
+def local_css():
+    st.markdown("""
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base and Typography */
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
 
+        /* Main Container Background */
+        .stApp {
+            background-color: #0e1117;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(26, 115, 232, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(103, 58, 183, 0.15) 0px, transparent 50%);
+        }
+
+        /* Sidebar Styling */
+        section[data-testid="stSidebar"] {
+            background-color: rgba(17, 25, 40, 0.75);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Chat Messages Glassmorphism */
+        [data-testid="stChatMessage"] {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* User Message specific style */
+        [data-testid="stChatMessage"]:nth-child(even) {
+            background-color: rgba(26, 115, 232, 0.1);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+        }
+
+        /* Titles and Text */
+        .big-title {
+            background: linear-gradient(90deg, #ffffff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Custom widgets */
+        .stButton>button {
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .stButton>button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+
+        /* Hide Streamlit elements */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
+        /* Status indicators */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+local_css()
 
 # ============================================================================
 # Funciones de API
 # ============================================================================
 
+@st.cache_data(ttl=60)
 def check_api_health() -> dict:
-    """Verifica el estado del servidor FastAPI"""
     try:
         response = requests.get(f"{API_BASE_URL}/health", timeout=5)
         if response.status_code == 200:
             return response.json()
         return {"status": "error", "authenticated": False}
-    except requests.exceptions.ConnectionError:
-        return {"status": "disconnected", "authenticated": False, "error": "No se puede conectar al servidor API"}
-    except Exception as e:
-        return {"status": "error", "authenticated": False, "error": str(e)}
-
+    except Exception:
+        return {"status": "disconnected", "authenticated": False}
 
 def query_notebooklm(question: str, notebook_id: str, conversation_id: str = None) -> dict:
-    """Realiza una consulta al cuaderno vía FastAPI"""
     try:
         payload = {
             "question": question,
@@ -89,165 +152,87 @@ def query_notebooklm(question: str, notebook_id: str, conversation_id: str = Non
             "conversation_id": conversation_id,
             "timeout": 120
         }
-        
-        response = requests.post(
-            f"{API_BASE_URL}/query",
-            json=payload,
-            timeout=130  # Un poco más que el timeout de la query
-        )
-        
+        response = requests.post(f"{API_BASE_URL}/query", json=payload, timeout=130)
         if response.status_code == 200:
             return response.json()
-        elif response.status_code == 401:
-            return {
-                "success": False,
-                "error": "Error de autenticación. Ejecuta 'notebooklm-mcp-auth' en la terminal."
-            }
-        elif response.status_code == 503:
-            return {
-                "success": False,
-                "error": "Servidor API no inicializado correctamente."
-            }
-        else:
-            return {
-                "success": False,
-                "error": f"Error HTTP {response.status_code}: {response.text}"
-            }
-            
-    except requests.exceptions.ConnectionError:
-        return {
-            "success": False,
-            "error": "❌ No se puede conectar al servidor API. Asegúrate de que esté corriendo en localhost:8000"
-        }
-    except requests.exceptions.Timeout:
-        return {
-            "success": False,
-            "error": "⏱️ Timeout: La consulta tardó demasiado. Intenta con una pregunta más simple."
-        }
+        return {"success": False, "error": f"Error {response.status_code}"}
     except Exception as e:
-        return {
-            "success": False,
-            "error": f"Error inesperado: {str(e)}"
-        }
-
-
-def get_notebooks() -> list:
-    """Obtiene la lista de cuadernos disponibles"""
-    try:
-        response = requests.get(f"{API_BASE_URL}/notebooks", timeout=30)
-        if response.status_code == 200:
-            return response.json()
-        return []
-    except:
-        return []
-
+        return {"success": False, "error": str(e)}
 
 # ============================================================================
 # Interfaz de Usuario
 # ============================================================================
 
-# Título principal
-st.title("🤖 Chat con NotebookLM")
-st.markdown("### Estrategia YouTube IA y Formación School")
+# Header adaptable
+st.markdown('<p class="big-title">Chat con el presupuesto de la Dipu</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Análisis inteligente del Presupuesto 2026 - Diputación de Sevilla</p>', unsafe_allow_html=True)
 
-# Sidebar
+# Sidebar Premium
 with st.sidebar:
-    st.header("📚 Panel de Control")
+    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_xN8E3340076-000000000000", width=100, use_container_width=False) # Placeholder o Logo
+    st.markdown("## 🏛️ Gestión Presupuestaria")
     
-    # Verificar estado del servidor
-    api_status = check_api_health()
-    
-    if api_status.get("status") == "ok":
-        if api_status.get("authenticated"):
-            st.success("✅ Conectado a NotebookLM")
-        else:
-            st.warning("⚠️ API activa pero no autenticada")
+    # Estado de la conexión
+    health = check_api_health()
+    if health.get("status") == "ok":
+        st.markdown('<div style="color: #4ade80; font-size: 0.9rem;">● En línea | Motor IA Listo</div>', unsafe_allow_html=True)
     else:
-        st.error("❌ API desconectada")
+        st.markdown('<div style="color: #f87171; font-size: 0.9rem;">○ Desconectado | Reinicia el túnel</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    
+    st.markdown("### 📊 Contenido del Cuaderno")
+    st.markdown("""
+    Este asistente tiene acceso a los documentos oficiales del **Presupuesto 2026**:
+    - Memoria de alcaldía
+    - Estado de gastos e ingresos
+    - Organismos autónomos (Prodetur, OPAEF, etc.)
+    - Planes provinciales de inversión
+    - Gastos de personal y subvenciones
+    """)
+    
+    st.markdown("---")
+    st.markdown("### 💡 Sugerencias de análisis")
+    with st.expander("Ver ejemplos de preguntas"):
         st.markdown("""
-        **Para iniciar el servidor:**
-        ```bash
-        python api_server.py
-        ```
+        - ¿Cuál es el gasto total en políticas sociales?
+        - Resume la inversión prevista para Prodetur.
+        - ¿Cuánto aumenta el presupuesto respecto a 2025?
+        - ¿Cuáles son las mayores partidas de subvenciones?
+        - Desglosa el presupuesto por capítulos.
         """)
     
     st.markdown("---")
     
-    # Información del cuaderno
-    st.info(f"""
-    **Cuaderno activo:**  
-    Estrategia YouTube IA y Formación School
-    
-    **Áreas de conocimiento:**
-    - Estrategia de Contenido
-    - Algoritmo y SEO YouTube
-    - Conocimiento Técnico en IA
-    - Automatización de Procesos
-    - Community Building
-    - Diseño Instruccional
-    - Marketing y Conversión
-    """)
-    
-    st.markdown("---")
-    st.markdown("**💡 Ejemplos de preguntas:**")
-    st.markdown("""
-    - ¿Qué área tiene más futuro?
-    - ¿Cómo implementar RAG?
-    - Dame ideas de contenido para YouTube
-    - ¿Qué herramientas de automatización recomiendas?
-    """)
-    
-    st.markdown("---")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔄 Limpiar Chat", use_container_width=True):
-            st.session_state.messages = []
-            st.session_state.conversation_id = None
-            st.rerun()
-    
-    with col2:
-        if st.button("🔌 Reconectar", use_container_width=True):
-            st.rerun()
+    if st.button("🗑️ Nueva Conversación", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.conversation_id = None
+        st.rerun()
 
+    st.caption("v2.0 | IA Fiscal Diputación Sevilla")
 
 # ============================================================================
-# Chat
+# Chat Core
 # ============================================================================
 
-# Inicializar estado de sesión
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
 if "conversation_id" not in st.session_state:
     st.session_state.conversation_id = None
 
-# Mostrar mensajes del historial
+# Mostrar historial
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Input del usuario
-if prompt := st.chat_input("Escribe tu pregunta aquí..."):
-    # Verificar conexión primero
-    api_status = check_api_health()
+# Entrada de usuario
+if prompt := st.chat_input("Consulta cualquier detalle sobre las cuentas de 2026..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
     
-    if api_status.get("status") != "ok":
-        st.error("❌ No hay conexión con el servidor API. Inicia el servidor con: `python api_server.py`")
-    else:
-        # Añadir mensaje del usuario al historial
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        
-        # Mostrar mensaje del usuario
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        # Obtener respuesta del assistant
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown("🔍 Consultando NotebookLM...")
-            
-            # Realizar la consulta
+    with st.chat_message("assistant"):
+        with st.spinner("Analizando fuentes presupuestarias..."):
             result = query_notebooklm(
                 question=prompt,
                 notebook_id=NOTEBOOK_ID,
@@ -255,32 +240,21 @@ if prompt := st.chat_input("Escribe tu pregunta aquí..."):
             )
             
             if result.get("success"):
-                response = result.get("answer", "No se recibió respuesta")
-                
-                # Actualizar conversation_id para mantener contexto
+                response = result.get("answer", "Sin respuesta disponible.")
                 if result.get("conversation_id"):
                     st.session_state.conversation_id = result["conversation_id"]
-                
-                # Mostrar respuesta
-                message_placeholder.markdown(response)
-                
-                # Añadir al historial
+                st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
             else:
-                error_msg = f"❌ {result.get('error', 'Error desconocido')}"
-                message_placeholder.error(error_msg)
+                error_msg = f"⚠️ **Error en la consulta:** {result.get('error')}"
+                st.error(error_msg)
                 st.session_state.messages.append({"role": "assistant", "content": error_msg})
 
-
-# ============================================================================
-# Footer
-# ============================================================================
-
-st.markdown("---")
+# Footer flotante discreto
 st.markdown(
     """
-    <div style='text-align: center; color: white;'>
-        <small>🚀 Potenciado por NotebookLM | FastAPI + Streamlit</small>
+    <div style='position: fixed; bottom: 10px; right: 20px; color: rgba(255,255,255,0.3); font-size: 0.7rem;'>
+        DipuBot 2026 Analysis System
     </div>
     """,
     unsafe_allow_html=True

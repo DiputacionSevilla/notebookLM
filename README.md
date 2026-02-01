@@ -1,6 +1,12 @@
-# 🤖 Chat con NotebookLM
+# 🏛️ DipuBot 2026: Análisis del Presupuesto de la Diputación de Sevilla
 
-Aplicación de chat que conecta con NotebookLM para consultar cuadernos de conocimiento mediante una interfaz web moderna.
+Asistente inteligente basado en **NotebookLM** para navegar y analizar los presupuestos 2026 de la Diputación de Sevilla y sus organismos autónomos.
+
+## ✨ Características Premium
+- **Análisis Profundo**: Respuestas basadas únicamente en fuentes oficiales (memorias, estados contables, planes provinciales).
+- **Interfaz Moderna**: Diseño premium con Glassmorphism y tipografía optimizada.
+- **Arquitectura Estable**: Túnel Cloudflare para mantener la autenticación persistente con Google.
+- **Precisión IA**: Configurada para no inventar información y responder siempre en castellano.
 
 ## 📋 Arquitectura
 
@@ -141,10 +147,10 @@ curl -X POST http://localhost:8000/query \
 
 ## 🛡️ Características de Estabilidad
 
-- **Auto-retry:** Si falla la autenticación, reintenta automáticamente
-- **Lazy Initialization:** El cliente se inicializa bajo demanda
-- **Headless Auth Recovery:** Intenta refrescar tokens automáticamente (solo local)
-- **Error Handling:** Captura específica de errores HTTP 400/500
+-   **Auto-retry:** Si falla la autenticación, reintenta automáticamente
+-   **Lazy Initialization:** El cliente se inicializa bajo demanda
+-   **Headless Auth Recovery:** Intenta refrescar tokens automáticamente (solo local)
+-   **Error Handling:** Captura específica de errores HTTP 400/500
 
 ## 🔐 Seguridad
 
