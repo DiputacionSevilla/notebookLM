@@ -191,11 +191,13 @@ async def query_notebook(request: QueryRequest):
     Realiza una consulta al cuaderno NotebookLM
     """
     global client
+    print(f"📥 Consulta recibida: {request.question[:50]}...")
+    
     # Auto-recuperación: Si el cliente no está inicializado, intentar iniciarlo ahora
     if not client:
-        print("⚠️ Cliente no inicializado. Intentando inicialización de emergencia...")
-        # Intentamos inicializar forzando refresh si es necesario
+        print("⚠️ Cliente no inicializado. Intentando inicialización...")
         if not init_client(force_refresh=True):
+            print("❌ Error: No se pudo inicializar el cliente.")
             raise HTTPException(
                 status_code=503,
                 detail="Cliente NotebookLM no inicializado. Ejecuta 'notebooklm-mcp-auth' primero."
@@ -205,6 +207,7 @@ async def query_notebook(request: QueryRequest):
         # Implementar lógica de reintento automático (1 vez)
         for attempt in range(2):
             try:
+                print(f"🔄 Intento {attempt + 1}/2...")
                 # Realizar la consulta de forma síncrona
                 result = await asyncio.to_thread(
                     client.query,
@@ -218,6 +221,7 @@ async def query_notebook(request: QueryRequest):
                 answer = result.get("answer", "") if isinstance(result, dict) else str(result)
                 conv_id = result.get("conversation_id") if isinstance(result, dict) else None
                 
+                print("✅ Consulta exitosa.")
                 return QueryResponse(
                     success=True,
                     answer=answer,
@@ -225,28 +229,28 @@ async def query_notebook(request: QueryRequest):
                 )
                 
             except AuthenticationError as e:
+                print(f"⚠️ Error de autenticación en intento {attempt + 1}: {e}")
                 if attempt == 0:
-                    print(f"⚠️ Error de autenticación en intento 1: {e}")
                     print("🔄 Intentando refrescar tokens (Headless) y reintentar...")
-                    # Forzar refresco real (headless auth si es posible)
                     if init_client(force_refresh=True):
                         continue 
-                
-                # Si fallamos en el segundo intento o no pudimos refrescar, relanzar para que lo capture el outer except
+                raise e
+            except Exception as e:
+                print(f"🔍 Excepción en intento {attempt + 1}: {type(e).__name__}: {e}")
                 raise e
 
     except AuthenticationError as e:
+        print(f"❌ Error final de autenticación: {e}")
         raise HTTPException(
             status_code=401,
             detail=f"Error de autenticación: {str(e)}. Ejecuta 'notebooklm-mcp-auth' para renovar tokens."
         )
     except httpx.HTTPStatusError as e:
-        # Errores 400/500 de NotebookLM - puede deberse a session_id/BL desactualizado
         error_detail = f"Error HTTP {e.response.status_code}: {e.response.text[:200]}"
         print(f"❌ HTTPStatusError: {error_detail}")
         return QueryResponse(
             success=False,
-            error=f"Error del servidor NotebookLM ({e.response.status_code}). Intenta ejecutar 'notebooklm-mcp-auth' para renovar los tokens."
+            error=f"Error del servidor NotebookLM ({e.response.status_code})."
         )
     except Exception as e:
         print(f"❌ Error inesperado: {type(e).__name__}: {e}")
