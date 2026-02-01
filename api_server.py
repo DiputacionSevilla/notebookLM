@@ -208,11 +208,23 @@ async def query_notebook(request: QueryRequest):
         for attempt in range(2):
             try:
                 print(f"🔄 Intento {attempt + 1}/2...")
+                
+                # Instrucciones de comportamiento personalizadas
+                system_instructions = (
+                    "INSTRUCCIONES CRÍTICAS:\n"
+                    "1. Responde ÚNICAMENTE basándote en las fuentes proporcionadas. No inventes información.\n"
+                    "2. Si la información no está en tus fuentes, indica explícitamente: 'Lo siento, esta información no está disponible en mis fuentes de entrenamiento'.\n"
+                    "3. Responde SIEMPRE en CASTELLANO/ESPAÑOL.\n\n"
+                    "PREGUNTA DEL USUARIO:\n"
+                )
+                
+                full_query = system_instructions + request.question
+
                 # Realizar la consulta de forma síncrona
                 result = await asyncio.to_thread(
                     client.query,
                     notebook_id=request.notebook_id,
-                    query_text=request.question,
+                    query_text=full_query,
                     conversation_id=request.conversation_id,
                     timeout=request.timeout
                 )
