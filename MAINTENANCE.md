@@ -10,9 +10,19 @@ Las cookies de autenticación de Google caducan aproximadamente cada **1-3 seman
 
 ---
 
-## 📋 Proceso Paso a Paso
+## 📋 Proceso Paso a Paso (Modo Túnel)
 
-### Paso 1: Generar Nuevas Credenciales (en tu PC)
+### Paso 1: Iniciar el Sistema (Cada vez que enciendas el PC)
+
+Ejecuta el script:
+```powershell
+./start_tunnel.bat
+```
+Esto abrirá dos ventanas: una para el backend FastAPI y otra para el túnel de Cloudflare.
+
+---
+
+### Paso 2: Generar Nuevas Credenciales (Solo si caducan)
 
 Abre una terminal en la carpeta del proyecto y ejecuta:
 
