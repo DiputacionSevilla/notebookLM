@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos Institucionales (Paleta de colores claros)
+# Estilos Institucionales Premium (Modo Oscuro Elegante)
 def local_css():
     st.markdown("""
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,7 +45,6 @@ def local_css():
         /* Base and Typography */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
-            color: #334155;
         }
         
         h1, h2, h3 {
@@ -53,72 +52,92 @@ def local_css():
             font-weight: 700;
         }
 
-        /* Main Container Background (Claro) */
+        /* Main Container Background (Modo Oscuro Premium) */
         .stApp {
-            background-color: #f8fafc;
+            background-color: #0f172a;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(0, 150, 94, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(71, 85, 105, 0.05) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(0, 150, 94, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(30, 41, 59, 0.1) 0px, transparent 50%);
         }
 
-        /* Sidebar Styling (Gris oscuro Institucional) */
+        /* Banner Superior Institucional */
+        .header-banner {
+            background-color: #1e293b;
+            padding: 1.5rem 2rem;
+            margin: -6rem -5rem 2.5rem -5rem;
+            border-bottom: 3px solid #22c55e;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-banner h1 {
+            color: #ffffff;
+            font-size: 2.2rem !important;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        /* Sidebar Styling (Vidrio Oscuro) */
         section[data-testid="stSidebar"] {
-            background-color: #334155;
-            border-right: 3px solid #00965e;
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
         section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
-        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
-            color: white !important;
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3,
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] li {
+            color: #cbd5e1 !important;
         }
 
-        /* Chat Messages (Estilo institucional claro) */
+        /* Chat Messages (Glassmorphism Premium) */
         [data-testid="stChatMessage"] {
-            background-color: white;
-            border: 1px solid #e2e8f0;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
         }
 
-        /* User Message specific style (Verde institucional muy suave) */
+        /* User Message specific style */
         [data-testid="stChatMessage"]:nth-child(even) {
-            background-color: #f0fdf4;
-            border: 1px solid #dcfce7;
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
         }
 
-        /* Titles and Text (Tamaño mayor según petición) */
-        .big-title {
-            color: #334155;
-            font-size: 4rem;
-            font-weight: 800;
-            margin-bottom: 0.2rem;
-            text-align: left;
-            line-height: 1.1;
-        }
-        
-        .subtitle {
-            color: #00965e;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 2.5rem;
+        /* Message text color */
+        [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li {
+            color: #f8fafc !important;
+            line-height: 1.6;
         }
 
         /* Custom widgets */
         .stButton>button {
             border-radius: 6px;
             font-weight: 600;
-            background-color: #00965e !important;
+            background-color: #22c55e !important;
             color: white !important;
             border: none;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
         
         .stButton>button:hover {
-            background-color: #007a4d !important;
-            transform: scale(1.02);
+            background-color: #16a34a !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Sidebar info box */
+        .sidebar-info {
+            background-color: rgba(255,255,255,0.03);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #22c55e;
+            margin-bottom: 1rem;
         }
 
         /* Hide Streamlit elements */
@@ -163,36 +182,34 @@ def query_notebooklm(question: str, notebook_id: str, conversation_id: str = Non
 # Interfaz de Usuario
 # ============================================================================
 
-# Header adaptable
-st.markdown('<p class="big-title">Chat con el presupuesto de la Dipu</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Análisis inteligente del Presupuesto 2026 - Diputación de Sevilla</p>', unsafe_allow_html=True)
+# Header Institucional
+st.markdown('<div class="header-banner"><h1>Chat con el presupuesto de la Dipu</h1></div>', unsafe_allow_html=True)
+st.markdown('<p style="color: #64748b; font-weight: 600; margin-top: 10px;">📊 Análisis inteligente del Presupuesto 2026 - Diputación de Sevilla</p>', unsafe_allow_html=True)
 
 # Sidebar Premium
 with st.sidebar:
     try:
-        st.image("logo-dipu.png", width=220, use_container_width=False)
+        st.image("logo-dipu.png", use_container_width=True)
     except:
         st.markdown("🏛️ **Diputación de Sevilla**")
-    st.markdown("## 🏛️ Gestión Presupuestaria")
+    
+    st.markdown("## ⚙️ Configuración")
     
     # Estado de la conexión
     health = check_api_health()
     if health.get("status") == "ok":
-        st.markdown('<div style="color: #4ade80; font-size: 0.9rem;">● En línea | Motor IA Listo</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color: #4ade80; font-size: 0.9rem; font-weight: 600;">● Sistema en Línea</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div style="color: #f87171; font-size: 0.9rem;">○ Desconectado | Reinicia el túnel</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color: #f87171; font-size: 0.9rem; font-weight: 600;">○ Sistema Fuera de Línea</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     
-    st.markdown("### 📊 Contenido del Cuaderno")
+    st.markdown("### 📊 Materia de Análisis")
     st.markdown("""
-    Este asistente tiene acceso a los documentos oficiales del **Presupuesto 2026**:
-    - Memoria de alcaldía
-    - Estado de gastos e ingresos
-    - Organismos autónomos (Prodetur, OPAEF, etc.)
-    - Planes provinciales de inversión
-    - Gastos de personal y subvenciones
-    """)
+    <div class="sidebar-info">
+    Este asistente está especializado en el <b>Presupuesto 2026</b> de la Diputación de Sevilla, incluyendo organismos autónomos y entidantes dependientes.
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown("### 💡 Sugerencias de análisis")
@@ -243,9 +260,15 @@ if prompt := st.chat_input("Consulta cualquier detalle sobre las cuentas de 2026
             )
             
             if result.get("success"):
-                response = result.get("answer", "Sin respuesta disponible.")
+                response = result.get("answer") or ""
+                
+                # Manejar respuestas vacías de forma explícita
+                if not response.strip():
+                    response = "⚠️ **El sistema no ha encontrado información específica en las fuentes para esta consulta.** Por favor, intenta reformular la pregunta o consultar sobre otro área del presupuesto."
+                
                 if result.get("conversation_id"):
                     st.session_state.conversation_id = result["conversation_id"]
+                
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
             else:

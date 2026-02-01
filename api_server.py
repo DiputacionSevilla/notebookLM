@@ -219,6 +219,7 @@ async def query_notebook(request: QueryRequest):
                 )
                 
                 full_query = system_instructions + request.question
+                print(f"📡 Enviando query a NotebookLM (longitud: {len(full_query)})")
 
                 # Realizar la consulta de forma síncrona
                 result = await asyncio.to_thread(
@@ -229,11 +230,20 @@ async def query_notebook(request: QueryRequest):
                     timeout=request.timeout
                 )
                 
-                # Extraer la respuesta
-                answer = result.get("answer", "") if isinstance(result, dict) else str(result)
-                conv_id = result.get("conversation_id") if isinstance(result, dict) else None
+                print(f"🎁 Resultado bruto recibido (tipo: {type(result).__name__}): {str(result)[:100]}...")
                 
-                print("✅ Consulta exitosa.")
+                # Extraer la respuesta de forma más robusta
+                if isinstance(result, dict):
+                    answer = result.get("answer") or result.get("text") or result.get("content") or ""
+                    conv_id = result.get("conversation_id")
+                else:
+                    answer = str(result)
+                    conv_id = None
+                
+                if not answer:
+                    print("⚠️ Advertencia: La respuesta extraída está VACÍA.")
+                
+                print(f"✅ Consulta exitosa. Respuesta de {len(answer)} caracteres.")
                 return QueryResponse(
                     success=True,
                     answer=answer,
