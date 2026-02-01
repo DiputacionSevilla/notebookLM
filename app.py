@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos Premium (Lavado de cara)
+# Estilos Institucionales (Paleta de colores claros)
 def local_css():
     st.markdown("""
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +45,7 @@ def local_css():
         /* Base and Typography */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
+            color: #334155;
         }
         
         h1, h2, h3 {
@@ -52,79 +53,78 @@ def local_css():
             font-weight: 700;
         }
 
-        /* Main Container Background */
+        /* Main Container Background (Claro) */
         .stApp {
-            background-color: #0e1117;
+            background-color: #f8fafc;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(26, 115, 232, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(103, 58, 183, 0.15) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(0, 150, 94, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(71, 85, 105, 0.05) 0px, transparent 50%);
         }
 
-        /* Sidebar Styling */
+        /* Sidebar Styling (Gris oscuro Institucional) */
         section[data-testid="stSidebar"] {
-            background-color: rgba(17, 25, 40, 0.75);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #334155;
+            border-right: 3px solid #00965e;
+        }
+        
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
+            color: white !important;
         }
 
-        /* Chat Messages Glassmorphism */
+        /* Chat Messages (Estilo institucional claro) */
         [data-testid="stChatMessage"] {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        /* User Message specific style */
+        /* User Message specific style (Verde institucional muy suave) */
         [data-testid="stChatMessage"]:nth-child(even) {
-            background-color: rgba(26, 115, 232, 0.1);
-            border: 1px solid rgba(26, 115, 232, 0.2);
+            background-color: #f0fdf4;
+            border: 1px solid #dcfce7;
         }
 
-        /* Titles and Text */
+        /* Titles and Text (Tamaño mayor según petición) */
         .big-title {
-            background: linear-gradient(90deg, #ffffff 0%, #a5b4fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 3rem;
+            color: #334155;
+            font-size: 4rem;
             font-weight: 800;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.2rem;
             text-align: left;
+            line-height: 1.1;
         }
         
         .subtitle {
-            color: #94a3b8;
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
+            color: #00965e;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2.5rem;
         }
 
         /* Custom widgets */
         .stButton>button {
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            background-color: #00965e !important;
+            color: white !important;
+            border: none;
+            transition: all 0.2s ease;
         }
         
         .stButton>button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+            background-color: #007a4d !important;
+            transform: scale(1.02);
         }
 
         /* Hide Streamlit elements */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
-        
-        /* Status indicators */
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -170,7 +170,7 @@ st.markdown('<p class="subtitle">Análisis inteligente del Presupuesto 2026 - Di
 # Sidebar Premium
 with st.sidebar:
     try:
-        st.image("logo.png", width=200, use_container_width=False)
+        st.image("logo-dipu.png", width=220, use_container_width=False)
     except:
         st.markdown("🏛️ **Diputación de Sevilla**")
     st.markdown("## 🏛️ Gestión Presupuestaria")
