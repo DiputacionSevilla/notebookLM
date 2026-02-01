@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos Institucionales Premium (Modo Oscuro Elegante)
+# Estilos Premium (Vuelve el Glassmorphism)
 def local_css():
     st.markdown("""
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +45,7 @@ def local_css():
         /* Base and Typography */
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
+            color: #ffffff;
         }
         
         h1, h2, h3 {
@@ -52,55 +53,36 @@ def local_css():
             font-weight: 700;
         }
 
-        /* Main Container Background (Modo Oscuro Premium) */
+        /* Main Container Background - El original que gustaba */
         .stApp {
-            background-color: #0f172a;
+            background-color: #0e1117;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(0, 150, 94, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(30, 41, 59, 0.1) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(26, 115, 232, 0.15) 0px, transparent 50%);
         }
 
-        /* Banner Superior Institucional */
-        .header-banner {
-            background-color: #1e293b;
-            padding: 1.5rem 2rem;
-            margin: -6rem -5rem 2.5rem -5rem;
-            border-bottom: 3px solid #22c55e;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-        }
-        
-        .header-banner h1 {
-            color: #ffffff;
-            font-size: 2.2rem !important;
-            margin: 0;
-            letter-spacing: -1px;
-        }
-
-        /* Sidebar Styling (Vidrio Oscuro) */
+        /* Sidebar Styling (Glassmorphism) */
         section[data-testid="stSidebar"] {
-            background-color: rgba(15, 23, 42, 0.8) !important;
+            background-color: rgba(17, 25, 40, 0.7) !important;
             backdrop-filter: blur(12px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
         section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
-        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3,
-        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] li {
-            color: #cbd5e1 !important;
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
+            color: #e2e8f0 !important;
         }
 
-        /* Chat Messages (Glassmorphism Premium) */
+        /* Chat Messages (Glassmorphism) */
         [data-testid="stChatMessage"] {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         /* User Message specific style */
@@ -109,35 +91,55 @@ def local_css():
             border: 1px solid rgba(34, 197, 94, 0.2);
         }
 
-        /* Message text color */
+        /* Full white text for responses */
         [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li {
-            color: #f8fafc !important;
+            color: #ffffff !important;
+            font-size: 1.05rem;
             line-height: 1.6;
+        }
+
+        /* Titles and Text (Grande como pedido) */
+        .big-title {
+            background: linear-gradient(90deg, #ffffff 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+            text-align: left;
+            line-height: 1.1;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
         }
 
         /* Custom widgets */
         .stButton>button {
-            border-radius: 6px;
+            border-radius: 10px;
             font-weight: 600;
             background-color: #22c55e !important;
             color: white !important;
             border: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .stButton>button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
             background-color: #16a34a !important;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
         }
 
         /* Sidebar info box */
         .sidebar-info {
-            background-color: rgba(255,255,255,0.03);
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 3px solid #22c55e;
-            margin-bottom: 1rem;
+            background-color: rgba(255,255,255,0.05);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border-left: 4px solid #22c55e;
+            margin-bottom: 1.5rem;
+            color: #cbd5e1;
         }
 
         /* Hide Streamlit elements */
@@ -182,9 +184,9 @@ def query_notebooklm(question: str, notebook_id: str, conversation_id: str = Non
 # Interfaz de Usuario
 # ============================================================================
 
-# Header Institucional
-st.markdown('<div class="header-banner"><h1>Chat con el presupuesto de la Dipu</h1></div>', unsafe_allow_html=True)
-st.markdown('<p style="color: #64748b; font-weight: 600; margin-top: 10px;">📊 Análisis inteligente del Presupuesto 2026 - Diputación de Sevilla</p>', unsafe_allow_html=True)
+# Header adaptable
+st.markdown('<p class="big-title">Chat con el presupuesto de la Dipu</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Análisis inteligente del Presupuesto 2026 - Diputación de Sevilla</p>', unsafe_allow_html=True)
 
 # Sidebar Premium
 with st.sidebar:

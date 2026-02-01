@@ -209,17 +209,9 @@ async def query_notebook(request: QueryRequest):
             try:
                 print(f"🔄 Intento {attempt + 1}/2...")
                 
-                # Instrucciones de comportamiento personalizadas
-                system_instructions = (
-                    "INSTRUCCIONES CRÍTICAS:\n"
-                    "1. Responde ÚNICAMENTE basándote en las fuentes proporcionadas. No inventes información.\n"
-                    "2. Si la información no está en tus fuentes, indica explícitamente: 'Lo siento, esta información no está disponible en mis fuentes de entrenamiento'.\n"
-                    "3. Responde SIEMPRE en CASTELLANO/ESPAÑOL.\n\n"
-                    "PREGUNTA DEL USUARIO:\n"
-                )
-                
-                full_query = system_instructions + request.question
-                print(f"📡 Enviando query a NotebookLM (longitud: {len(full_query)})")
+                # Enviar la pregunta limpia para que NotebookLM use su propio contexto optimizado
+                full_query = request.question
+                print(f"📡 Enviando query a NotebookLM: '{full_query[:50]}...'")
 
                 # Realizar la consulta de forma síncrona
                 result = await asyncio.to_thread(
