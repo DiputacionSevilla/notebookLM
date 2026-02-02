@@ -19,9 +19,21 @@ try:
 except Exception:
     API_BASE_URL = "http://127.0.0.1:8000"
 
-# ID del cuaderno (Actualizado para el nuevo contexto si es necesario, 
+# ID del cuaderno (Actualizado para el nuevo contexto si es necesario,
 # por ahora mantenemos el ID pero el usuario indicó que el contenido cambió)
 NOTEBOOK_ID = "0523ea1e-7973-400a-a749-55a805205030"
+
+# Instrucciones del sistema para NotebookLM
+SYSTEM_INSTRUCTIONS = """
+INSTRUCCIONES OBLIGATORIAS:
+- Responde SIEMPRE en castellano (espanol de Espana).
+- Basate UNICAMENTE en la informacion contenida en las fuentes del notebook.
+- NO inventes, supongas ni extrapoles informacion que no este en las fuentes.
+- Si no dispones de la informacion solicitada, responde claramente: "No dispongo de esa informacion en las fuentes disponibles."
+- Cita las fuentes cuando sea posible.
+
+CONSULTA DEL USUARIO:
+"""
 
 # ============================================================================
 # Configuración de la página
@@ -170,8 +182,11 @@ def check_api_health() -> dict:
 
 def query_notebooklm(question: str, notebook_id: str, conversation_id: str = None) -> dict:
     try:
+        # Concatenar instrucciones del sistema con la pregunta del usuario
+        full_question = SYSTEM_INSTRUCTIONS + question
+
         payload = {
-            "question": question,
+            "question": full_question,
             "notebook_id": notebook_id,
             "conversation_id": conversation_id,
             "timeout": 120

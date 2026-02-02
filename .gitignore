@@ -40,3 +40,13 @@ auth.json
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Credentials and logs
+cookies.txt
+debug_log.txt
+
+# Claude Code
+.claude/
+
+# Misc
+=0.1.15
