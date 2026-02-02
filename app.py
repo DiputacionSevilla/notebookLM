@@ -15,13 +15,13 @@ try:
     if "API_BASE_URL" in st.secrets:
         API_BASE_URL = st.secrets["API_BASE_URL"]
     else:
-        API_BASE_URL = "http://localhost:8000"
+        API_BASE_URL = "http://127.0.0.1:8000"
 except Exception:
-    API_BASE_URL = "http://localhost:8000"
+    API_BASE_URL = "http://127.0.0.1:8000"
 
 # ID del cuaderno (Actualizado para el nuevo contexto si es necesario, 
 # por ahora mantenemos el ID pero el usuario indicó que el contenido cambió)
-NOTEBOOK_ID = "8442d244-d797-48fe-b495-21d053e6ac4e"
+NOTEBOOK_ID = "0523ea1e-7973-400a-a749-55a805205030"
 
 # ============================================================================
 # Configuración de la página

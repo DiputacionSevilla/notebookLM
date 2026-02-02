@@ -268,7 +268,7 @@ async def debug_tokens():
         "psid_prefix": psid[:15] + "...",
         "csrf_present": bool(tokens.csrf_token),
         "session_id": tokens.session_id,
-        "active_notebook": "8442d244-d797-48fe-b495-21d053e6ac4e"
+        "active_notebook": "0523ea1e-7973-400a-a749-55a805205030"
     }
 
 

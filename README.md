@@ -141,7 +141,7 @@ curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
     "question": "¿Cuál es la estrategia principal?",
-    "notebook_id": "8442d244-d797-48fe-b495-21d053e6ac4e"
+    "notebook_id": "0523ea1e-7973-400a-a749-55a805205030"
   }'
 ```
 
